@@ -48,38 +48,24 @@ def get_api_answer(current_timestamp):
             params=params
         ).json()
     except ConnectionError as error:
-        logging.error(f'Ошибка при запросе к API: {error}')
+        logging.error(f'Ошибка в работе программы: {error}')
     return homework_statuses
 
 
 def check_response(response):
     """Проверка ответа API на корректность."""
-    if isinstance(response, dict):
-        if 'homeworks' not in response.keys():
-            logging.error(
-                'Ответ API не содержит ключ homeworks'
-            )
-            raise KeyError(
-                'Ответ API не содержит ключ homeworks'
-            )
-        homeworks = response.get('homeworks')
-        if isinstance(homeworks, list):
-            if homeworks == []:
-                logging.debug('Новых статусов нет')
-        else:
-            logging.error(
-                'Ответ отличается от ожидаемого'
-            )
-            raise TypeError(
-                'Ответ отличается от ожидаемого'
-            )
-    else:
-        logging.error(
-            'Ответ API отличается от ожидаемого'
-        )
-        raise TypeError(
-            'Ответ API отличается от ожидаемого'
-        )
+    homeworks_all = response['homeworks']
+    try:
+        homeworks = homeworks_all[0]
+    except TypeError:
+        logging.error('Ответ отличается от ожидаемого')
+        raise TypeError('Ответ отличается от ожидаемого')
+    except IndexError:
+        logging.error('Новых статусов домашних работ нет')
+        raise IndexError('Новых статусов домашних работ нет')
+    except KeyError:
+        logging.error('Ответ API не содержит ключ homeworks')
+        raise KeyError('Ответ API не содержит ключ homeworks')
     return homeworks
 
 
