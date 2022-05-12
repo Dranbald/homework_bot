@@ -32,13 +32,13 @@ logging.basicConfig(
 
 
 def send_message(bot, message):
-    """Отправка сообщения от бота"""
+    """Отправка сообщения от бота."""
     bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
     logging.info('Сообщение отправлено')
 
 
 def get_api_answer(current_timestamp):
-    """Запрос к API"""
+    """Запрос к API."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
@@ -53,7 +53,7 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
-    """Проверка ответа API на корректность"""
+    """Проверка ответа API на корректность."""
     if isinstance(response, dict):
         if 'homeworks' not in response.keys():
             logging.error(
@@ -84,7 +84,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Запрос статуса домашней работы"""
+    """Запрос статуса домашней работы."""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
     if homework_status not in HOMEWORK_STATUSES.keys():
@@ -99,10 +99,10 @@ def parse_status(homework):
 
 
 def check_tokens():
-    """Проверка наличия Токенов"""
+    """Проверка наличия Токенов."""
     if (TELEGRAM_TOKEN is None
-        or TELEGRAM_CHAT_ID is None
-        or PRACTICUM_TOKEN is None):
+            or TELEGRAM_CHAT_ID is None
+            or PRACTICUM_TOKEN is None):
         logging.critical(
             'Одна или более переменных отсутствует'
         )
