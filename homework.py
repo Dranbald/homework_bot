@@ -33,8 +33,8 @@ logging.basicConfig(
     level=logging.INFO,
     handlers=[
         logging.StreamHandler(sys.stdout)
-            ]
-    )
+        ]
+)
 
 
 def send_message(bot, message):
@@ -59,7 +59,7 @@ def get_api_answer(current_timestamp):
     except requests.exceptions.RequestException as error:
         logging.error(f'Ошибка в работе программы: {error}')
         raise Exception(f'Ошибка в работе программы: {error}')
-    
+
 
 def check_response(response):
     """Проверка ответа API на корректность."""
