@@ -1,7 +1,9 @@
+from http import HTTPStatus
 import logging
 import os
 import time
 import requests
+import sys
 from tokenize import TokenError
 from dotenv import load_dotenv
 from telegram import Bot
@@ -28,7 +30,11 @@ HOMEWORK_STATUSES = {
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO)
+    level=logging.INFO,
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+            ]
+    )
 
 
 def send_message(bot, message):
@@ -42,30 +48,47 @@ def get_api_answer(current_timestamp):
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
-        homework_statuses = requests.get(
-            ENDPOINT,
+        response = requests.get(
+            url=ENDPOINT,
             headers=HEADERS,
             params=params
-        ).json()
-    except ConnectionError as error:
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise requests.HTTPError(response)
+        return response.json()
+    except requests.exceptions.RequestException as error:
         logging.error(f'Ошибка в работе программы: {error}')
-    return homework_statuses
-
+        raise Exception(f'Ошибка в работе программы: {error}')
+    
 
 def check_response(response):
     """Проверка ответа API на корректность."""
-    homeworks_all = response['homeworks']
-    try:
-        homeworks = homeworks_all[0]
-    except TypeError:
-        logging.error('Ответ отличается от ожидаемого')
-        raise TypeError('Ответ отличается от ожидаемого')
-    except IndexError:
-        logging.error('Новых статусов домашних работ нет')
-        raise IndexError('Новых статусов домашних работ нет')
-    except KeyError:
-        logging.error('Ответ API не содержит ключ homeworks')
-        raise KeyError('Ответ API не содержит ключ homeworks')
+    if isinstance(response, dict):
+        if 'homeworks' not in response.keys():
+            logging.error(
+                'Ответ API не содержит ключ homeworks'
+            )
+            raise KeyError(
+                'Ответ API не содержит ключ homeworks'
+            )
+        homeworks = response.get('homeworks')
+        if isinstance(homeworks, list):
+            if homeworks == []:
+                logging.debug('Новых статусов нет')
+        else:
+            logging.error(
+                'Ответ отличается от ожидаемого'
+            )
+            raise TypeError(
+                'Ответ отличается от ожидаемого'
+            )
+    else:
+        logging.error(
+            'Ответ API отличается от ожидаемого'
+        )
+        raise TypeError(
+            'Ответ API отличается от ожидаемого'
+        )
     return homeworks
 
 
