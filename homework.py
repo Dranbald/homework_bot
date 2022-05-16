@@ -39,8 +39,14 @@ logging.basicConfig(
 
 def send_message(bot, message):
     """Отправка сообщения от бота."""
-    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-    logging.info('Сообщение отправлено')
+    try:
+        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        logging.info('Сообщение отправлено')
+    except Exception:
+        logging.error(
+            f'Сбой при отправке сообщения',
+            exc_info=True
+        )
 
 
 def get_api_answer(current_timestamp):
@@ -63,31 +69,30 @@ def get_api_answer(current_timestamp):
 
 def check_response(response):
     """Проверка ответа API на корректность."""
-    if isinstance(response, dict):
-        if 'homeworks' not in response.keys():
-            logging.error(
-                'Ответ API не содержит ключ homeworks'
-            )
-            raise KeyError(
-                'Ответ API не содержит ключ homeworks'
-            )
-        homeworks = response.get('homeworks')
-        if isinstance(homeworks, list):
-            if homeworks == []:
-                logging.debug('Новых статусов нет')
-        else:
-            logging.error(
-                'Ответ отличается от ожидаемого'
-            )
-            raise TypeError(
-                'Ответ отличается от ожидаемого'
-            )
-    else:
+    if not isinstance(response, dict):
         logging.error(
-            'Ответ API отличается от ожидаемого'
+            'Тип данных API не является словарем'
         )
         raise TypeError(
-            'Ответ API отличается от ожидаемого'
+            'Тип данных API не является словарем'
+        )
+    elif 'homeworks' not in response:
+        logging.error(
+            'Ответ API не содержит ключ homeworks'
+        )
+        raise KeyError(
+            'Ответ API не содержит ключ homeworks'
+        )
+    homeworks = response.get('homeworks')
+    if isinstance(homeworks, list):
+            homeworks == []
+            logging.debug('Новых статусов нет')
+    else:
+        logging.error(
+            'Ответ отличается от ожидаемого'
+        )
+        raise TypeError(
+            'Ответ отличается от ожидаемого'
         )
     return homeworks
 
@@ -109,14 +114,16 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка наличия Токенов."""
-    if (TELEGRAM_TOKEN is None
-            or TELEGRAM_CHAT_ID is None
-            or PRACTICUM_TOKEN is None):
+    if all([TELEGRAM_TOKEN,
+           TELEGRAM_CHAT_ID,
+           PRACTICUM_TOKEN]):
+        return True
+    else:
         logging.critical(
             'Одна или более переменных отсутствует'
         )
         return False
-    return True
+    
 
 
 def main():
@@ -136,15 +143,14 @@ def main():
             else:
                 logging.debug('Статус не изменился')
             current_timestamp = response.get('current_date', current_timestamp)
-            time.sleep(RETRY_TIME)
-
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             send_message(bot, message)
             logging.error(message)
-            time.sleep(RETRY_TIME)
         else:
             logging.critical('Сбой в работе бота')
+        finally:
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
