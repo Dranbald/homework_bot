@@ -43,10 +43,7 @@ def send_message(bot, message):
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
         logging.info('Сообщение отправлено')
     except Exception:
-        logging.error(
-            f'Сбой при отправке сообщения',
-            exc_info=True
-        )
+        logging.error('Сбой при отправке сообщения')
 
 
 def get_api_answer(current_timestamp):
@@ -85,8 +82,8 @@ def check_response(response):
         )
     homeworks = response.get('homeworks')
     if isinstance(homeworks, list):
-            homeworks == []
-            logging.debug('Новых статусов нет')
+        homeworks == []
+        logging.debug('Новых статусов нет')
     else:
         logging.error(
             'Ответ отличается от ожидаемого'
@@ -123,7 +120,6 @@ def check_tokens():
             'Одна или более переменных отсутствует'
         )
         return False
-    
 
 
 def main():
